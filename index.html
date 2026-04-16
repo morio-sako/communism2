@@ -1,0 +1,551 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>人民の敬語検定</title>
+  <style>
+    /* 革命的カラースキームとフォント設定 */
+    html, body {
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      -webkit-writing-mode: vertical-rl;
+      -ms-writing-mode: tb-rl;
+      background-color: #5a0000; /* 暗い血の赤 */
+      color: #ffd700; /* 黄金色 */
+      font-family: 'Impact', 'Arial Black', 'Noto Sans JP', sans-serif;
+      font-weight: 900;
+      padding: 20px;
+      margin: 0;
+      font-size: 2em;
+      transition: background-color 0.1s;
+      overflow: hidden; /* 爆発エフェクト時のスクロールバー非表示 */
+    }
+
+    .container {
+      text-align: start;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    }
+
+    h1 {
+      font-size: 1.5em;
+      margin-bottom: 20px;
+      border-right: 5px solid #ffd700;
+      padding-right: 15px;
+    }
+
+    .question {
+      margin-bottom: 20px;
+      background-color: #800000;
+      padding: 15px;
+      border: 2px solid #ffd700;
+      box-shadow: 5px 5px 0px #300000;
+    }
+
+    .choices button {
+      display: block;
+      margin: 15px 0;
+      padding: 20px 15px;
+      font-size: 1.5em;
+      font-family: 'Impact', 'Arial Black', 'Noto Sans JP', sans-serif;
+      font-weight: bold;
+      cursor: pointer;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      -webkit-writing-mode: vertical-rl;
+      -ms-writing-mode: tb-rl;
+      background-color: #b22222;
+      color: #ffd700;
+      border: 3px solid #ffd700;
+      box-shadow: 4px 4px 0px #000;
+      transition: all 0.1s;
+    }
+
+    .choices button:hover {
+      background-color: #ffd700;
+      color: #b22222;
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0px #000;
+    }
+
+    .choices button:active {
+      transform: translate(2px, 2px);
+      box-shadow: 0px 0px 0px #000;
+    }
+
+    .result {
+      margin-top: 20px;
+      font-size: 1.5em;
+      font-weight: bold;
+      text-shadow: 3px 3px 0px #000;
+    }
+
+    .history {
+      margin-top: 30px;
+      font-size: 0.8em;
+      background-color: rgba(0,0,0,0.5);
+      padding: 10px;
+      border: 1px solid #ffd700;
+    }
+
+    #nameForm {
+      margin-bottom: 20px;
+      background-color: #800000;
+      padding: 20px;
+      border: 2px solid #ffd700;
+    }
+
+    #nameInput {
+      font-size: 1em;
+      padding: 10px;
+      background-color: #fff;
+      color: #000;
+      border: 2px solid #ffd700;
+      writing-mode: horizontal-tb; /* 入力しやすいように横書き */
+      margin-right: 15px;
+    }
+
+    #nameForm button {
+      font-size: 1em;
+      padding: 10px 20px;
+      background-color: #ffd700;
+      color: #800000;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+      writing-mode: horizontal-tb;
+    }
+
+    /* --- 過激なペナルティエフェクト用のCSS --- */
+    @keyframes shake {
+      0% { transform: translate(1px, 1px) rotate(0deg); }
+      10% { transform: translate(-5px, -8px) rotate(-2deg); }
+      20% { transform: translate(-10px, 0px) rotate(2deg); }
+      30% { transform: translate(10px, 8px) rotate(0deg); }
+      40% { transform: translate(5px, -5px) rotate(2deg); }
+      50% { transform: translate(-5px, 10px) rotate(-2deg); }
+      60% { transform: translate(-10px, 5px) rotate(0deg); }
+      70% { transform: translate(10px, 5px) rotate(-2deg); }
+      80% { transform: translate(-5px, -5px) rotate(2deg); }
+      90% { transform: translate(5px, 10px) rotate(0deg); }
+      100% { transform: translate(1px, -8px) rotate(-2deg); }
+    }
+
+    .shake-screen {
+      animation: shake 0.1s infinite;
+    }
+
+    .flash-red {
+      background-color: #ff0000 !important;
+    }
+
+    .flash-black {
+      background-color: #000000 !important;
+    }
+
+    #explosion {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      font-size: 20rem;
+      z-index: 9999;
+      pointer-events: none;
+      transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      writing-mode: horizontal-tb;
+      text-shadow: 0 0 50px #ff0000;
+    }
+
+    .explode-active {
+      transform: translate(-50%, -50%) scale(1.5) !important;
+    }
+
+    /* 追加：銃殺・粉砕用の専用アニメーション */
+    .gun-active {
+      transform: translate(-50%, -50%) scale(2) !important;
+      animation: gunRecoil 0.1s infinite alternate;
+    }
+    @keyframes gunRecoil {
+      0% { transform: translate(-55%, -50%) scale(2); }
+      100% { transform: translate(-45%, -50%) scale(2); }
+    }
+
+    .hammer-active {
+      transform: translate(-50%, -50%) scale(2) rotate(45deg) !important;
+      transform-origin: bottom right;
+      animation: hammerSmash 0.3s ease-in forwards;
+    }
+    @keyframes hammerSmash {
+      0% { transform: translate(-50%, -100%) scale(2) rotate(-45deg); }
+      100% { transform: translate(-50%, -50%) scale(2) rotate(45deg); }
+    }
+
+    /* 追加：スターリン登場用エフェクト */
+    #stalin-bg {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: repeating-conic-gradient(from 0deg, #ff0000 0deg 15deg, #ffd700 15deg 30deg);
+      z-index: 9000;
+      display: none;
+      opacity: 0;
+      transition: opacity 1.5s;
+    }
+    
+    #stalin-container {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 9001;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      writing-mode: horizontal-tb;
+      text-shadow: 2px 2px 5px #000;
+      text-align: center;
+    }
+
+    #stalin-img {
+      width: 250px;
+      border: 10px solid #ffd700;
+      border-radius: 10px;
+      box-shadow: 0 0 50px #000;
+      margin-bottom: -20px;
+      z-index: 1;
+    }
+
+    #handshake {
+      font-size: 8rem;
+      z-index: 2;
+      animation: shakeHands 0.5s infinite alternate;
+    }
+
+    @keyframes shakeHands {
+      0% { transform: translateY(0) rotate(-5deg); }
+      100% { transform: translateY(20px) rotate(5deg); }
+    }
+
+    #stalin-words {
+      font-size: 2.5rem;
+      color: #ffd700;
+      font-family: 'Impact', sans-serif;
+      background: rgba(90, 0, 0, 0.9);
+      padding: 10px 20px;
+      border: 3px solid #ffd700;
+      white-space: nowrap;
+    }
+
+    #warning-text {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 5rem;
+      color: #ff0000;
+      font-family: 'Impact', sans-serif;
+      text-shadow: 5px 5px 0 #000, -5px -5px 0 #000, 5px -5px 0 #000, -5px 5px 0 #000;
+      z-index: 10000;
+      display: none;
+      writing-mode: horizontal-tb;
+      white-space: nowrap;
+    }
+
+    @media screen and (max-width: 600px) {
+      body {
+        font-size: 1.5em;
+        padding: 10px;
+      }
+      .choices button {
+        padding: 15px 5px;
+        font-size: 1.2em;
+      }
+      #explosion {
+        font-size: 10rem;
+      }
+      #warning-text {
+        font-size: 3rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 爆撃・銃撃・粉砕エフェクト用要素 -->
+  <div id="explosion"></div>
+  <div id="warning-text"></div>
+
+  <!-- スターリン登場エフェクト用要素 -->
+  <div id="stalin-bg"></div>
+  <div id="stalin-container">
+    <img id="stalin-img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Stalin_Portrait.jpg/400px-Stalin_Portrait.jpg" alt="大元帥">
+    <div id="handshake">??</div>
+    <div id="stalin-words"></div>
+  </div>
+
+  <div class="container" id="main-container">
+    <h1>人民の敬語検定</h1>
+    <form id="nameForm">
+      同志よ、人民の名を名乗れ：<br><br>
+      <input type="text" id="nameInput" required placeholder="同志の名前" />
+      <button type="submit">闘争開始</button>
+    </form>
+
+    <div class="question" id="question" style="display:none;"></div>
+    <div class="choices" id="choices"></div>
+    <div class="result" id="result"></div>
+    <div class="history" id="history"></div>
+  </div>
+
+  <script>
+    // クイズデータは元のものをそのまま使用
+    const quizData = [
+      { question: "「のたまはす」の敬語の種類として正しいものを選びなさい。", choices: ["尊敬語", "謙譲語", "丁寧語"], answer: 0 },
+      { question: "「のたまふ」の敬語の種類として正しいものを選びなさい。", choices: ["尊敬語", "謙譲語", "丁寧語"], answer: 0 },
+      { question: "「おおとのごもる」の敬語の種類として正しいものを選びなさい。", choices: ["尊敬語", "謙譲語", "丁寧語"], answer: 0 },
+      { question: "「聞し召す」の敬語の種類として正しいものを選びなさい。", choices: ["尊敬語", "謙譲語", "丁寧語"], answer: 0 },
+      { question: "「たまはす」の敬語の種類として正しいものを選びなさい。", choices: ["尊敬語", "謙譲語", "丁寧語"], answer: 0 },
+      { question: "「召す」の敬語の種類として正しいものを選びなさい。", choices: ["尊敬語", "謙譲語", "丁寧語"], answer: 0 },
+      { question: "「思す」の敬語の種類として正しいものを選びなさい。", choices: ["尊敬語", "謙譲語", "丁寧語"], answer: 0 },
+      { question: "「遣はす」の敬語の種類として正しいものを選びなさい。", choices: ["尊敬語", "謙譲語", "丁寧語"], answer: 0 },
+      { question: "「思し召す」の敬語の種類として正しいものを選びなさい。", choices: ["尊敬語", "謙譲語", "丁寧語"], answer: 0 },
+      { question: "「あそばす」の敬語の種類として正しいものを選びなさい。", choices: ["尊敬語", "謙譲語", "丁寧語"], answer: 0 },
+      { question: "「たまう（四段）」の敬語の種類として正しいものを選びなさい。", choices: ["尊敬語", "謙譲語", "丁寧語"], answer: 0 },
+      { question: "「賜ぶ」の敬語の種類として正しいものを選びなさい。", choices: ["尊敬語", "謙譲語", "丁寧語"], answer: 0 },
+      { question: "「ご覧ず」の敬語の種類として正しいものを選びなさい。", choices: ["尊敬語", "謙譲語", "丁寧語"], answer: 0 },
+      { question: "「思ほす」の敬語の種類として正しいものを選びなさい。", choices: ["尊敬語", "謙譲語", "丁寧語"], answer: 0 },
+      { question: "「仰す」の敬語の種類として正しいものを選びなさい。", choices: ["尊敬語", "謙譲語", "丁寧語"], answer: 0 },
+      { question: "「聞こえさす」の敬語の種類として正しいものを選びなさい。", choices: ["尊敬語", "謙譲語", "丁寧語"], answer: 1 },
+      { question: "「聞こゆ」の敬語の種類として正しいものを選びなさい。", choices: ["尊敬語", "謙譲語", "丁寧語"], answer: 1 },
+      { question: "「申す」の敬語の種類として正しいものを選びなさい。", choices: ["尊敬語", "謙譲語", "丁寧語"], answer: 1 },
+      { question: "「仕うまつる」の敬語の種類として正しいものを選びなさい。", choices: ["尊敬語", "謙譲語", "丁寧語"], answer: 1 },
+      { question: "「詣づ」の敬語の種類として正しいものを選びなさい。", choices: ["尊敬語", "謙譲語", "丁寧語"], answer: 1 },
+      { question: "「まかづ」の敬語の種類として正しいものを選びなさい。", choices: ["尊敬語", "謙譲語", "丁寧語"], answer: 1 },
+      { question: "「まかる」の敬語の種類として正しいものを選びなさい。", choices: ["尊敬語", "謙譲語", "丁寧語"], answer: 1 },
+      { question: "「参らす」の敬語の種類として正しいものを選びなさい。", choices: ["尊敬語", "謙譲語", "丁寧語"], answer: 1 },
+      { question: "「賜はる」の敬語の種類として正しいものを選びなさい。", choices: ["尊敬語", "謙譲語", "丁寧語"], answer: 1 },
+      { question: "「奉る」の敬語の種類として正しいものを選びなさい。", choices: ["尊敬語", "謙譲語", "丁寧語"], answer: 1 },
+      { question: "「啓す」の敬語の種類として正しいものを選びなさい。", choices: ["尊敬語", "謙譲語", "丁寧語"], answer: 1 },
+      { question: "「奏す」の敬語の種類として正しいものを選びなさい。", choices: ["尊敬語", "謙譲語", "丁寧語"], answer: 1 },
+      { question: "「たまふ（下二段）」の敬語の種類として正しいものを選びなさい。", choices: ["尊敬語", "謙譲語", "丁寧語"], answer: 1 },
+      { question: "「参る」の敬語の種類として正しいものを選びなさい。", choices: ["尊敬語", "謙譲語", "丁寧語"], answer: 1 },
+      { question: "「侍る（本動詞）」の敬語の種類として正しいものを選びなさい。", choices: ["尊敬語", "謙譲語", "丁寧語"], answer: 1 },
+      { question: "「侍る（補助動詞）」の敬語の種類として正しいものを選びなさい。", choices: ["尊敬語", "謙譲語", "丁寧語"], answer: 2 },
+      { question: "「候ふ（補助動詞）」の敬語の種類として正しいものを選びなさい。", choices: ["尊敬語", "謙譲語", "丁寧語"], answer: 2 }
+    ];
+
+    let quiz = [];
+    let current = 0;
+    let score = 0;
+    let userName = "";
+    let flashInterval;
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    function startQuiz() {
+      // エフェクトをリセット
+      document.body.classList.remove("shake-screen");
+      document.body.classList.remove("flash-red");
+      document.body.classList.remove("flash-black");
+      clearInterval(flashInterval);
+      
+      const explosion = document.getElementById("explosion");
+      explosion.className = "";
+      explosion.textContent = "";
+      
+      document.getElementById("warning-text").style.display = "none";
+      document.body.style.backgroundColor = "#5a0000";
+
+      // スターリンエフェクトのリセット
+      document.getElementById("stalin-bg").style.display = "none";
+      document.getElementById("stalin-bg").style.opacity = "0";
+      document.getElementById("stalin-container").style.display = "none";
+      document.getElementById("main-container").style.display = "block";
+
+      quiz = [...quizData];
+      shuffle(quiz);
+      quiz = quiz.slice(0, 10);
+      current = 0;
+      score = 0;
+      document.getElementById("nameForm").style.display = "none";
+      document.getElementById("question").style.display = "block";
+      document.querySelector("h1").style.display = "none";
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      const q = quiz[current];
+      document.getElementById("question").innerHTML = `【第 ${current + 1} 段階闘争】<br>${q.question}`;
+      const choicesDiv = document.getElementById("choices");
+      choicesDiv.innerHTML = "";
+      document.getElementById("result").textContent = "";
+
+      q.choices.forEach((choiceText, index) => {
+        const btn = document.createElement("button");
+        btn.textContent = choiceText;
+        btn.onclick = () => checkAnswer(index === q.answer);
+        choicesDiv.appendChild(btn);
+      });
+    }
+
+    function triggerPunishment() {
+      // 画面を激しく揺らす
+      document.body.classList.add("shake-screen");
+      
+      const explosion = document.getElementById("explosion");
+      const warningText = document.getElementById("warning-text");
+      
+      // ランダムに罰を選択 (0: 爆撃, 1: 銃殺, 2: 粉砕)
+      const punishmentType = Math.floor(Math.random() * 3);
+      
+      if (punishmentType === 0) {
+        explosion.textContent = "??";
+        explosion.classList.add("explode-active");
+        warningText.textContent = "爆 撃";
+      } else if (punishmentType === 1) {
+        explosion.textContent = "??";
+        explosion.classList.add("gun-active");
+        warningText.textContent = "銃 殺";
+      } else {
+        explosion.textContent = "??";
+        explosion.classList.add("hammer-active");
+        warningText.textContent = "粉 砕";
+      }
+
+      warningText.style.display = "block";
+      
+      // 銃撃/爆撃を模したフラッシュ効果（赤と黒が交互に光る）
+      let isRed = true;
+      flashInterval = setInterval(() => {
+        if (isRed) {
+          document.body.classList.add("flash-red");
+          document.body.classList.remove("flash-black");
+        } else {
+          document.body.classList.add("flash-black");
+          document.body.classList.remove("flash-red");
+        }
+        isRed = !isRed;
+      }, 50);
+
+      // 2.5秒後に元に戻してリスタート
+      setTimeout(() => {
+        startQuiz();
+      }, 2500);
+    }
+
+    function checkAnswer(isCorrect) {
+      const result = document.getElementById("result");
+      const buttons = document.querySelectorAll(".choices button");
+      buttons.forEach(btn => btn.disabled = true);
+
+      if (isCorrect) {
+        result.innerHTML = "同志よ、党の模範である！<br>（正解）";
+        result.style.color = "#00ff00";
+        score++;
+        if (score === 10) {
+          endQuiz();
+          return;
+        }
+      } else {
+        result.innerHTML = "反革命的行為！！<br>直ちに処罰する！！！";
+        result.style.color = "#ffffff";
+        result.style.backgroundColor = "#ff0000";
+        
+        // 過激なペナルティエフェクトを発動
+        triggerPunishment();
+        return;
+      }
+
+      current++;
+      setTimeout(() => {
+        if (current < quiz.length) {
+          loadQuestion();
+        } else {
+          endQuiz();
+        }
+      }, 1000);
+    }
+
+    function endQuiz() {
+      const now = new Date();
+      const timestamp = now.toLocaleString("ja-JP", { hour12: false });
+      
+      // 全問正解の場合はスターリンエフェクトを発動
+      if (score === 10) {
+        document.getElementById("main-container").style.display = "none";
+        
+        const stalinBg = document.getElementById("stalin-bg");
+        const stalinContainer = document.getElementById("stalin-container");
+        const stalinWords = document.getElementById("stalin-words");
+        
+        stalinBg.style.display = "block";
+        stalinContainer.style.display = "flex";
+        stalinWords.innerHTML = `${userName} 同志よ、<br>君こそが党の誇りだ！`;
+        
+        // 後光のフェードイン
+        setTimeout(() => {
+          stalinBg.style.opacity = "1";
+        }, 50);
+      } else {
+        document.getElementById("question").innerHTML = `★ 革命完遂 ★<br>${userName} 同志よ、見事な思想的勝利だ！ (${timestamp})`;
+      }
+      
+      document.getElementById("choices").innerHTML = "";
+      document.getElementById("result").innerHTML = "";
+      saveHistory(`同志 ${userName} : 完遂 (${timestamp})`);
+      displayHistory();
+      
+      // 再スタートボタンの作成
+      const restartBtn = document.createElement("button");
+      restartBtn.textContent = "新たな闘争へ";
+      restartBtn.style.marginTop = "20px";
+      restartBtn.onclick = startQuiz;
+      
+      // スタイルを直接当てる（スターリン画面でも見えるように）
+      restartBtn.style.padding = "15px 30px";
+      restartBtn.style.fontSize = "1.5em";
+      restartBtn.style.fontFamily = "'Impact', 'Arial Black', sans-serif";
+      restartBtn.style.fontWeight = "bold";
+      restartBtn.style.backgroundColor = "#b22222";
+      restartBtn.style.color = "#ffd700";
+      restartBtn.style.border = "4px solid #ffd700";
+      restartBtn.style.cursor = "pointer";
+      restartBtn.style.writingMode = "horizontal-tb";
+      restartBtn.style.boxShadow = "4px 4px 0px #000";
+      
+      if (score === 10) {
+        document.getElementById("stalin-container").appendChild(restartBtn);
+      } else {
+        document.getElementById("choices").appendChild(restartBtn);
+      }
+    }
+
+    function saveHistory(entry) {
+      let history = JSON.parse(localStorage.getItem("revQuizHistory")) || [];
+      history.push(entry);
+      localStorage.setItem("revQuizHistory", JSON.stringify(history));
+    }
+
+    function displayHistory() {
+      const history = JSON.parse(localStorage.getItem("revQuizHistory")) || [];
+      const historyDiv = document.getElementById("history");
+      historyDiv.innerHTML = "<h3>【革命の歴史】</h3><ul>" +
+        history.map(item => `<li>${item}</li>`).join("") +
+        "</ul>";
+    }
+
+    document.getElementById("nameForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const input = document.getElementById("nameInput");
+      if (input.value.trim() !== "") {
+        userName = input.value.trim();
+        startQuiz();
+      }
+    });
+
+    displayHistory();
+  </script>
+</body>
+</html>
